@@ -54,3 +54,43 @@ npm start
 App will be live at `http://localhost:3000`
 
 ## 📁 Project Structure
+Reddit-clone/
+├── client/ # React frontend
+├── server/ # Node.js + Express backend
+├── README.md
+└── .env.example
+
+
+## 🧪 Testing
+```bash
+# Backend tests
+npm test
+
+# Frontend tests
+cd client && npm test
+```
+
+## 🔧 Development Scripts
+```bash
+npm run dev          # Start both frontend + backend
+npm run build        # Build for production
+npm run lint         # Run ESLint
+```
+
+## 📊 API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Create new user |
+| POST | `/api/posts` | Create post |
+| GET | `/api/posts` | Get all posts |
+| POST | `/api/posts/:id/vote` | Vote on post |
+
+*See `/server/docs/api.md` for full documentation.*
+
+## 🤝 Contributing
+1. Fork the repo
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
