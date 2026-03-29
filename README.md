@@ -2,9 +2,6 @@
 
 A fully functional Reddit-inspired social media platform built with modern web technologies. Users can create posts, comment, upvote/downvote, and browse communities (subreddits) in a clean, responsive interface.
 
-![Screenshot](screenshots/demo.png)
-*Add a screenshot of your app here for better visual appeal.*
-
 ## ✨ Features
 
 - **User Authentication**: Secure login/signup with JWT tokens
