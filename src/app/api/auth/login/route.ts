@@ -4,14 +4,17 @@ import { prisma } from '@/lib/prisma'
 import { signToken } from '@/lib/jwt'
 
 export async function POST(request: NextRequest) {
-  const { username, email, password } = await request.json()
+  const { username, email, identifier, password } = await request.json()
+  const loginValue = (identifier || username || email || '').trim()
 
-  if (!password || (!username && !email)) {
+  if (!password || !loginValue) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
   }
 
   const user = await prisma.user.findFirst({
-    where: username ? { username } : { email }
+    where: {
+      OR: [{ username: loginValue }, { email: loginValue }]
+    }
   })
 
   if (!user) {

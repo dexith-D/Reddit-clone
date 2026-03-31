@@ -2,98 +2,153 @@
 
 import { useState } from 'react'
 
+interface AuthUser {
+  id: string
+  username: string
+  email: string
+}
+
 interface AuthFormProps {
-  onAuth: (token: string, user: any) => void
+  onAuth: (token: string, user: AuthUser) => void
 }
 
 export default function AuthForm({ onAuth }: AuthFormProps) {
   const [isLogin, setIsLogin] = useState(true)
-  const [form, setForm] = useState({ username: '', email: '', password: '' })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [form, setForm] = useState({ identifier: '', username: '', email: '', password: '' })
+
+  const handleChange = (field: 'identifier' | 'username' | 'email' | 'password', value: string) => {
+    setForm((current) => ({ ...current, [field]: value }))
+    if (error) {
+      setError('')
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsSubmitting(true)
+    setError('')
+
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup'
-    const body = isLogin ? { username: form.username || form.email, password: form.password } : form
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    })
-    const data = await res.json()
-    if (res.ok) {
+    const body = isLogin
+      ? { identifier: form.identifier.trim(), password: form.password }
+      : {
+          username: form.username.trim(),
+          email: form.email.trim(),
+          password: form.password
+        }
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error ?? 'Unable to authenticate right now.')
+        return
+      }
+
       onAuth(data.token, data.user)
-    } else {
-      alert(data.error)
+      setForm({ identifier: '', username: '', email: '', password: '' })
+    } catch {
+      setError('Unable to reach the server. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="max-w-md mx-auto bg-white border border-gray-300 rounded-lg shadow-sm">
-      <div className="flex border-b border-gray-300">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="bg-linear-to-r from-[#ff4500] to-[#ff6a00] px-4 py-4 text-white">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-100">Join the thread</p>
+        <h2 className="mt-1 text-lg font-bold">Sign in to vote, comment, and create posts</h2>
+      </div>
+
+      <div className="flex border-b border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600">
         <button
           type="button"
           onClick={() => setIsLogin(true)}
-          className={`flex-1 py-3 px-4 text-center font-medium ${isLogin ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-500'}`}
+          className={`flex-1 px-4 py-3 ${isLogin ? 'border-b-2 border-[#ff4500] text-[#ff4500]' : ''}`}
         >
           Log In
         </button>
         <button
           type="button"
           onClick={() => setIsLogin(false)}
-          className={`flex-1 py-3 px-4 text-center font-medium ${!isLogin ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-500'}`}
+          className={`flex-1 px-4 py-3 ${!isLogin ? 'border-b-2 border-[#ff4500] text-[#ff4500]' : ''}`}
         >
           Sign Up
         </button>
       </div>
-      <form onSubmit={handleSubmit} className="p-6">
-        {!isLogin && (
-          <div className="mb-4">
+
+      <form onSubmit={handleSubmit} className="space-y-3 p-4">
+        {isLogin ? (
+          <input
+            type="text"
+            placeholder="Username or email"
+            value={form.identifier}
+            onChange={(e) => handleChange('identifier', e.target.value)}
+            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-[#0079d3]"
+            required
+          />
+        ) : (
+          <>
             <input
               type="text"
               placeholder="Username"
               value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
+              onChange={(e) => handleChange('username', e.target.value)}
+              className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-[#0079d3]"
               required
             />
-          </div>
+            <input
+              type="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={(e) => handleChange('email', e.target.value)}
+              className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-[#0079d3]"
+              required
+            />
+          </>
         )}
-        <div className="mb-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
-            required
-          />
-        </div>
-        <div className="mb-6">
-          <input
-            type="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
-            required
-          />
-        </div>
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={(e) => handleChange('password', e.target.value)}
+          className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-[#0079d3]"
+          required
+        />
+
+        {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+
         <button
           type="submit"
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded transition duration-200"
+          disabled={isSubmitting}
+          className="w-full rounded-full bg-[#0079d3] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0060a8] disabled:cursor-not-allowed disabled:bg-slate-300"
         >
-          {isLogin ? 'Log In' : 'Sign Up'}
+          {isSubmitting ? 'Please wait...' : isLogin ? 'Log In' : 'Create Account'}
         </button>
-        <div className="mt-4 text-center text-sm text-gray-600">
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
+
+        <p className="text-center text-xs text-slate-500">
+          {isLogin ? "New here? " : 'Already have an account? '}
           <button
             type="button"
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-orange-500 hover:underline"
+            onClick={() => {
+              setIsLogin(!isLogin)
+              setError('')
+            }}
+            className="font-semibold text-[#0079d3] hover:underline"
           >
-            {isLogin ? 'Sign up' : 'Log in'}
+            {isLogin ? 'Sign up instead' : 'Log in instead'}
           </button>
-        </div>
+        </p>
       </form>
     </div>
   )

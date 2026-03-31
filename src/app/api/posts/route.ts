@@ -7,11 +7,18 @@ export async function GET() {
     include: {
       author: { select: { id: true, username: true } },
       subreddit: { select: { id: true, name: true } },
+      votes: { select: { type: true } },
       _count: { select: { comments: true, votes: true } }
     },
     orderBy: { createdAt: 'desc' }
   })
-  return NextResponse.json(posts)
+
+  const serializedPosts = posts.map(({ votes, ...post }) => ({
+    ...post,
+    voteScore: votes.reduce((total, vote) => total + vote.type, 0)
+  }))
+
+  return NextResponse.json(serializedPosts)
 }
 
 export async function POST(request: NextRequest) {
@@ -27,8 +34,8 @@ export async function POST(request: NextRequest) {
 
   const post = await prisma.post.create({
     data: {
-      title,
-      content,
+      title: title.trim(),
+      content: content?.trim() || null,
       authorId: user.id,
       subredditId
     },
